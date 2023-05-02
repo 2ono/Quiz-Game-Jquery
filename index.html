@@ -14,7 +14,8 @@
     
     <div class="container mt-5">
         <h5 class="card-text float-right font-weight-bold">Total Time : <br> (00: <span id="time">00</span>)</h5>
-    <div class="row d-flex justify-content-center">
+    
+        <div class="row d-flex justify-content-center">
         <div class="col-md-8 border p-4">
             <div class="card-body">
                 <h5 class="card-text float-left font-weight-bold">
@@ -30,7 +31,7 @@
                     <p>You will get 5 point for each correct answer, At the end of the Quiz,
                         your total score will be displayed. Maximum score is 25 points.
                     </p>
-                    <button class="btn btn-success d-flex ma-auto mt-4" id="btn"><h5>Start the Quiz</h5></button>
+                    <button class="btn btn-success d-flex mx-auto mt-4" id="btn"><h5>Start the Quiz</h5></button>
                 </div>
 
                 <div id="main">
@@ -46,9 +47,20 @@
                         <button class="btn btn-block btn-outline-success text-left option" id="options4"></button>
                     <div class="footer p-4">
                         <button class="btn btn-success float-left" id="prev">Previos</button>
-                        <button class="btn btn-success float-right" id="prev">Next</button>
+                        <button class="btn btn-success float-right" id="next">Next</button>
                     </div>
                     </div>
+
+                    <div class="d-flex justify-content-center">
+                        <button class="btn btn-primary btn-lg mx-auto" id="finish">Finish</button>
+                    </div>
+                </div>
+
+                <div id="Result">
+                    <h3 class="mt-5 display-4">Mark: <span id="marks"></span>/25</h3>
+                    <h3 class="mt-4"><span id="correct-answer">3</span> Correct out of 5</h3>
+                    <h3 class="mt-4">Result : <span id="percentage">100%</span></h3>
+
                 </div>
 
             </div>
@@ -61,6 +73,152 @@
 
     </div>
 
+
+    <script>
+        var count = 0;
+        var time = 30;
+        var marks = 0;
+        var answer = [];
+        var timer;
+
+
+
+        $(document).ready(function() {
+            $('#finish').hide();
+            $('#Result').hide();
+      
+
+        buttons_manager() ;
+
+        function buttons_manager() {
+            if(count > 0) {
+                $('#prev').show();
+                if(count == 4) {
+                    $('#next').hide();
+                    $('#finish').show();
+                }
+                else {
+                    $('#next').show();
+                }
+            } 
+            else {
+                $('#prev').hide();
+            }
+        }
+
+        function adding_Question(date, i) {
+            $('#question').text(date[i].Quiz)
+            $('#options1').text(date[i].option1)
+            $('#options2').text(date[i].option2)
+            $('#options3').text(date[i].option3)
+            $('#options4').text(date[i].option4)
+            $('#number').text(Number(i + 1));
+        }
+
+        
+        function selected_Answer() {
+            for(let i = 0; i < 4; i++) {
+                let a = document.getElementById('options').children;
+                if(a[i].innerHTML == answer[count]) {
+                    $('#options').children("button")[i].classList.add("active");
+                
+                } 
+                else {
+                    $('#options').children("button")[i].classList.remove("active");
+                }
+            }
+        }
+
+
+        function creating_result(date) {
+            for(let i = 0; i < answer.length; i++) {
+                marks +=5;
+            }
+            $('#main').hide();
+
+            $('#marks').text(marks);
+            $('#correct-answer').text(marks / 5);
+            $('#correct-answer').text((marks / 25) * 100 + "%");
+
+            $('#Result').show();
+        }
+        $('#options').hide();
+
+        fetch('data.json')
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function (data) {
+            $('#btn').click(function() {
+                $('#options').show();
+                adding_Question(data.Questions, count);
+                $('.start_page').hide();
+                $('#prev').hide();
+
+                timer = setInterval(timer_function, 1000);
+
+
+
+                function timer_function() {
+                    $('#time').text(time);
+                    if(time < 1) {
+                        clearInterval(timer);
+                        alert("Out of time");
+                        creating_result(data);
+                        $('#main').hide();
+                        $('#result').show();
+                    }
+                    time--;
+                }
+
+
+            });
+
+            $('.option').click(function () {
+
+                $(this).addClass("active");
+                $(this).siblings().removeClass("active");
+                answer[count] = $(this).html();
+            });
+
+            $('#next').click(function() {
+                if(count > answer.length -1) {
+                    alert("Select Atleast 1 Option")
+                }
+                else {
+                    count++;
+                    adding_Question(data.Questions, count);
+                    $('#prev').show();
+                    $('.option').removeClass("active");
+                    buttons_manager();
+                    selected_Answer();
+                }
+            });
+
+            $('#prev').click(function() {
+                count--;
+                adding_Question(data.Questions, count);
+                buttons_manager();
+                selected_Answer();
+            
+            });
+
+            $('#finish').click(function() {
+                if(count > answer.length - 1) {
+                    alert("Select Atleast Option");
+                }
+                else {
+                    creating_result(data);
+                    clearInterval(timer);
+                }
+            })
+
+        })
+
+        
+
+    })
+    </script>
 
     <script src="https://unpkg.com/@popperjs/core@2/dist/umd/popper.js"></script>
     <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
